@@ -2,7 +2,7 @@
 
 在`.NET Core 3.0`的版本更新中，官方我们带来了一个新的接口 `IAsyncDisposable`。
 
-小伙伴一看肯定就知道，它和.NET中原有的`IDisposable`接口肯定有着密布可分分的关系，且一定是它的异步实现版本。
+小伙伴一看肯定就知道，它和.NET中原有的`IDisposable`接口肯定有着密不可分分的关系，且一定是它的异步实现版本。
 
 那么.NET是为什么要在 **.NET Core 3.0 （伴随C# 8）** 发布的同时，带来该接口呢？ 还有就是该异步版本和原来的`IDispose`有着什么样的区别呢？ 到底在哪种场景下我们能使用它呢？
 
@@ -42,7 +42,7 @@ public class ExampleClass
 
 虽然析构函数方法在某些需要进行清理的情况下是有效的，但它有下面两个严重的缺点：
 
-+ 只有在GC检测到某个对象可以被回收时才会调用该对象的终结方法，这发生在不冉需要资源之后的某个不确定的时间。这样一来，开发人员可以或希望释放资源的时刻与资源实际被终结方法释放的时刻之间会有一个延迟。如果程序需要使用许多稀缺资源（容易耗尽的资源）或不释放资源的代价会很高（例如，大块的非托管内存），那么这样的延迟可能会让人无法接受。
++ 只有在GC检测到某个对象可以被回收时才会调用该对象的终结方法，这发生在不再需要资源之后的某个不确定的时间。这样一来，开发人员可以或希望释放资源的时刻与资源实际被终结方法释放的时刻之间会有一个延迟。如果程序需要使用许多稀缺资源（容易耗尽的资源）或不释放资源的代价会很高（例如，大块的非托管内存），那么这样的延迟可能会让人无法接受。
 + 当CLR需要调用终结方法时，它必须把回收对象内存的工作推迟到垃圾收集的下一轮（终结方法会在两轮垃圾收集之间运行）。这意味着对象的内存会在很长一段时间内得不到释放。
 
 因此，如果需要尽快回收非托管资源，或者资源很稀缺，或者对性能要求极高以至于无法接受在GC时增加额外开销，那么在这些情况下完全依靠析构函数的方法可能不太合适。
@@ -56,7 +56,6 @@ public class ExampleClass
 使用该接口，我们可以实现名为`Dispose`的方法，进行一些手动释放资源的操作（包括托管资源和非托管资源）。 
 
 ```csharp
-
 public class ExampleClass:IDisposable
 {
 	private Stream _memoryStream = new MemoryStream();
@@ -73,7 +72,6 @@ public class ExampleClass:IDisposable
 		_memoryStream.Dispose();	
 	}
 }
-
 ```
 
 在C#中，我们除了可以手动调用 `xx.Dispose()`方法来触发释放之外，还可以使用`using`的语法糖。 
@@ -85,7 +83,6 @@ public class ExampleClass:IDisposable
 “释放模式”所生成的代码如下：
 
 ```csharp
-
 protected virtual void Dispose(bool disposing)
 {
 	if (!disposedValue)
@@ -114,7 +111,6 @@ public void Dispose()
 	Dispose(disposing: true);
 	GC.SuppressFinalize(this);
 }
-
 ```
 
 释放资源的代码被放置在 `Dispose(bool disposing)` 方法中，你可以选用 析构函数 或者 IDisposable 来进行调用该方法。
@@ -142,7 +138,6 @@ public void Dispose()
 它的用法与`IDisposable`非常的类似：
 
 ```csharp
-
 public class ExampleClass : IAsyncDisposable
 {
 	private Stream _memoryStream = new MemoryStream();
@@ -157,27 +152,22 @@ public class ExampleClass : IAsyncDisposable
 		await _memoryStream.DisposeAsync();
 	}
 }
-
 ```
 
 当然，`using`的语法糖同样适用于它。不过，由于它是异步编程的风格，在使用时记得添加`await`关键字：
 
 ```csharp
-
 await using var s = new ExampleClass()
 {
 	// doing
 };
-
 ```
 
 当然在 `C# 8` 以上，我们可以使用`using作用域`的简化写法：
 
 ```csharp
-
 await using var s = new ExampleClass();
 // doing
-
 ```
 
 ### IAsyncDisposable与IDisposable的选择
@@ -198,7 +188,7 @@ await using var s = new ExampleClass();
 
 在`.NET 5` 之后，大部分的类都具有了`IAsyncDisposable`的实现。比如： 
 
-+ `Utf8JsonWriter`、`StreamWriter`这些于文件操作有关的类；
++ `Utf8JsonWriter`、`StreamWriter`这些与文件操作有关的类；
 + `DbContext`这类数据库操作类
 + `Timer`
 + 依赖注入的`ServiceProvider`
@@ -221,7 +211,6 @@ await using var s = new ExampleClass();
 那么，当`IAsyncDisposable`出现之后呢？会出现什么情况：
 
 ```csharp
-
 public void ConfigureServices(IServiceCollection services)
 {
 	services.AddControllers();
@@ -245,7 +234,6 @@ public class DemoDisposableObject : IAsyncDisposable
 那么如果 `IAsyncDisposable` 和 `IDisposable` 一同使用呢？
 
 ```csharp
-
 public class DemoDisposableObject : IAsyncDisposable,IDisposable
 {
 	public void Dispose()
@@ -258,7 +246,6 @@ public class DemoDisposableObject : IAsyncDisposable,IDisposable
 		code here  
 	}
 }
-
 ```
 
 这样的结果是：*只有`DisposeAsync`方法会被调用*。
@@ -314,7 +301,6 @@ public class RequestServicesFeature : IServiceProvidersFeature, IDisposable, IAs
 *以下代码位于 [DependencyInjection源码](https://github.com/dotnet/runtime/blob/b7f505dcb13f0fd80a33c962446bf13f87a31b33/src/libraries/Microsoft.Extensions.DependencyInjection/src/ServiceLookup/ServiceProviderEngineScope.cs#L112)*
 
 ```csharp
-
 internal sealed class ServiceProviderEngineScope : IServiceScope, IServiceProvider, IAsyncDisposable, IServiceScopeFactory
 {
 	public ValueTask DisposeAsync()
@@ -353,6 +339,7 @@ internal sealed class ServiceProviderEngineScope : IServiceScope, IServiceProvid
 		}
 
 		return default;
+	}
 }
 ```
 
@@ -380,6 +367,7 @@ internal sealed class ServiceProviderEngineScope : IServiceScope, IServiceProvid
 类似于下方代码：
 
 *节选自**Stream**类的[源码](https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/IO/Stream.cs)*
+
 ```csharp
 public void Dispose() => Close();
 
