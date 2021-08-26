@@ -1,4 +1,4 @@
-#   IAsyncDisposable
+#   熟悉而陌生的新朋友——IAsyncDisposable
 
 在`.NET Core 3.0`的版本更新中，官方我们带来了一个新的接口 `IAsyncDisposable`。
 
@@ -261,7 +261,7 @@ public class DemoDisposableObject : IAsyncDisposable,IDisposable
 
 ```
 
-这样的结果是：***只有`DisposeAsync`方法会被调用*。
+这样的结果是：*只有`DisposeAsync`方法会被调用*。
 
 为什么会有这样的结果呢？ 让我们一起来扒开它的面纱。
 
