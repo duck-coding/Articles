@@ -9,13 +9,13 @@
 
 翻译成大白话就是：应用程序的代码可以访问一个正由该程序使用的对象，垃圾回收器就不能回收该对象，就可以认为应用程序对该对象具有强引用。
 
-我们平常用的都是对象的强引用。这种情况下，假如该对象的实例还在被其他地方所使用，那么`GC` 是不能回收当前对象的。
+我们平常用的都是对象的强引用。这种情况下，假如该对象的实例还在被其他地方所使用，那么 `GC` 是不能回收当前对象的。
 
-如果在实际开发中，你创建了一个很大的对象而且该对象还会不断的“生长”（比如一个拥有很大文本的string，被不断添加到一个静态的List中，而该List忘记在操作之后被清空）。
+如果在实际开发中，你创建了一个很大的对象而且该对象还会不断的“生长”（比如不断往一个静态List中添加大文本的string，而该List忘记在操作之后被清空）。
 
-到最后你或许会得到一个OutOfMemoryException的异常，然后正在吃鸡的你突然接到老板的电话：“明天你可以不用来了，又出线上事故！”。
+到最后你或许会得到一个`OutOfMemoryException`的异常，然后正在吃鸡的你突然接到老板的电话：“明天你可以不用来了，又出线上事故！”。
 
-![OutOfMemoryException.png](https://i.loli.net/2021/08/23/YIO5rPigE6lw9Bn.png)
+![201.png](https://ae03.alicdn.com/kf/H63bb9502665e4d6faf7f586025a1527cK.png)
 
 发生该惨案的原因是，大量的对象实例占用了大量的内存。
 
@@ -51,8 +51,7 @@ public class CacheController : ControllerBase
     private static Dictionary<long, User> UserCacheStrongReference = new();
 
     // 使用弱引用
-    private static Dictionary<long, WeakReference<User>> UserCacheWeakReference =
-        new();
+    private static Dictionary<long, WeakReference<User>> UserCacheWeakReference = new();
 
     [HttpGet]
     [Route("StrongReference")]
@@ -102,11 +101,11 @@ public class User
 
 上面的演示代码比较简单，是我们日常开发中使用本地缓存的常用方式，因此不在赘述。
 
-当程序运行起来的时候，我们使用postjson工具做压力测试，以模拟大量用户请求上述接口的场景。
+当程序运行起来的时候，我们使用`postjson工具`做压力测试，以模拟大量用户请求上述接口的场景。
 
 先看看我们没有任何请求的状态下GC和内存使用情况：
 
-![正常状态下.png](https://i.loli.net/2021/08/23/4xFk3MVeLvuctOX.png)
+![202.png](https://ae01.alicdn.com/kf/H03f434ff0bbc4810b169f1231b4896bag.png)
 
 无请求状态下应用已分配（托管对象占用的内存量）内存接近10M，工作集（进程的虚拟地址空间中当前驻留在物理内存中的页集）内存接近80M。
 
@@ -114,11 +113,11 @@ public class User
 
   我们模拟一个用户请求5000次的场景
 
-  ![强引用测试环境.png](https://i.loli.net/2021/08/23/W8oGiUCshXq1AYL.png)
+  ![203.png](https://ae01.alicdn.com/kf/Hcbe62fd56d4947da9bbc4e75ca98116et.png)
 
   待程序run一会儿，得到下面的一个折线图：
 
-  ![StrongReference-2.png](https://i.loli.net/2021/08/23/wiBxfSbWdUELrks.png)
+  ![204.png](https://ae03.alicdn.com/kf/He47ad3e1cad2452abe7b52fe4be6c584g.png)
 
   可以看出，随着时间的推移，我们的内存呈现出了直线增长的状态。
 
@@ -128,11 +127,11 @@ public class User
 
   为了测试公平起见，先停止应用程序然后再重新启动，模拟请求参数和上述保持一致：
 
-  ![弱引用测试环境.png](https://i.loli.net/2021/08/23/uomLGjH6Jg5aQPZ.png)
+  ![205.png](https://ae03.alicdn.com/kf/H7dc8c434775a4e33909b81f650e90ce50.png)
 
   同样等程序run一会儿，得到下面的一个折线图：
 
-  ![WeakReference-2.png](https://i.loli.net/2021/08/23/8B2KzuGPwF4bYMj.png)
+  ![206.png](https://ae05.alicdn.com/kf/Hfbc01363ac68455b9506901d7f98f25dN.png)
 
 相信看到这儿，您应该已经可以看出差距来了。
 
@@ -146,7 +145,7 @@ public class User
 
 ## 从WeakReference中获取引用的对象
 
-获取获取当前WeakReference对象引用的对象很简单，WeakReference提供了一个Target属性以及TryGetTarget方法。
+获取当前`WeakReference`对象引用的对象很简单，`WeakReference`提供了一个`Target`属性以及`TryGetTarget`方法。
 
 我们通过这个属性就可以获取应用的对象，以上述示例为基础，我们从缓存中获取User对象：
 
@@ -190,3 +189,5 @@ public User GetUserFromWeakReferenceDic(long userId)
 - 避免对小对象使用弱引用，因为指针本身可能和对象一样大，或者比对象还大。
 
 - 避免将弱引用作为内存管理问题的自动解决方案， 而应开发一个有效的缓存策略来处理应用程序的对象。
+
+最后的最后，希望大家 **点赞，关注，一键三连** 走一波。
